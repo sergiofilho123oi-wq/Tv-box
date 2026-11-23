@@ -32,6 +32,9 @@ jobs:
         uses: android-actions/setup-android@v3
         with:
           accept-android-sdk-licenses: true
+          # O padrão da action é "tools platform-tools"; o pacote "tools" foi descontinuado
+          # pelo Google e gera "Failed to find package 'tools'". Instalamos só o necessário.
+          packages: platform-tools
 
       # Aceita TODAS as licenças do SDK sem interação (responde "y" a cada pergunta do sdkmanager).
       # "set +o pipefail": o `yes` morre com SIGPIPE (código 141) quando o sdkmanager termina,
