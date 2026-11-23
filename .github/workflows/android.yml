@@ -1,4 +1,4 @@
-name: Build TVBox OS
+name: Android CI
 
 on:
   push:
@@ -30,12 +30,28 @@ jobs:
 
       - name: Configurar Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          accept-android-sdk-licenses: true
+
+      # Aceita TODAS as licenças do SDK sem interação (responde "y" a cada pergunta do sdkmanager).
+      # "set +o pipefail": o `yes` morre com SIGPIPE (código 141) quando o sdkmanager termina,
+      # e o bash do GitHub Actions usa pipefail por padrão, o que derrubaria o passo à toa.
+      - name: Aceitar licenças do Android SDK
+        shell: bash
+        run: |
+          set +o pipefail
+          yes | sdkmanager --licenses > /tmp/licenses.log 2>&1
+          tail -n 5 /tmp/licenses.log
+          if grep -q "not accepted" /tmp/licenses.log; then
+            echo "Ainda há licenças não aceitas"; cat /tmp/licenses.log; exit 1
+          fi
 
       # compileSdk = 33 (app/build.gradle.kts): instala a plataforma e as build-tools correspondentes
       - name: Instalar plataforma android-33
+        shell: bash
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-33" "build-tools;33.0.2" "platform-tools"
+          set +o pipefail
+          yes | sdkmanager "platforms;android-33" "build-tools;33.0.2" "platform-tools"
 
       - name: Verificar Gradle Wrapper
         run: |
